@@ -1,0 +1,192 @@
+apiVersion: v1
+items:
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: velero
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: velero
+    namespace: velero
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: velero
+    namespace: velero
+- apiVersion: velero.io/v1
+  kind: BackupStorageLocation
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: default
+    namespace: velero
+  spec:
+    config:
+      region: us-east-2
+    objectStorage:
+      bucket: velero-6f96b97ad72c184fb331459172bf4ccf
+      prefix: "velero"
+    provider: aws
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: velero
+    namespace: velero
+  spec:
+    selector:
+      matchLabels:
+        deploy: velero
+    strategy: {}
+    template:
+      metadata:
+        annotations:
+          prometheus.io/path: /metrics
+          prometheus.io/port: "8085"
+          prometheus.io/scrape: "true"
+        creationTimestamp: null
+        labels:
+          component: velero
+          deploy: velero
+      spec:
+        containers:
+        - args:
+          - server
+          command:
+          - /velero
+          env:
+          - name: VELERO_SCRATCH_DIR
+            value: /scratch
+          - name: VELERO_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: LD_LIBRARY_PATH
+            value: /plugins
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /credentials/cloud
+          - name: AWS_SHARED_CREDENTIALS_FILE
+            value: /credentials/cloud
+          - name: AZURE_CREDENTIALS_FILE
+            value: /credentials/cloud
+          image: velero/velero:v1.2.0
+          imagePullPolicy: IfNotPresent
+          name: velero
+          ports:
+          - containerPort: 8085
+            name: metrics
+          resources:
+            limits:
+              cpu: "1"
+              memory: 256Mi
+            requests:
+              cpu: 500m
+              memory: 128Mi
+          volumeMounts:
+          - mountPath: /plugins
+            name: plugins
+          - mountPath: /scratch
+            name: scratch
+          - mountPath: /credentials
+            name: cloud-credentials
+        initContainers:
+        - image: velero/velero-plugin-for-aws:v1.0.0
+          imagePullPolicy: IfNotPresent
+          name: velero-plugin-for-aws
+          resources: {}
+          volumeMounts:
+          - mountPath: /target
+            name: plugins
+        restartPolicy: Always
+        serviceAccountName: velero
+        volumes:
+        - emptyDir: {}
+          name: plugins
+        - emptyDir: {}
+          name: scratch
+        - name: cloud-credentials
+          secret:
+            secretName: cloud-credentials
+- apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: restic
+    namespace: velero
+  spec:
+    selector:
+      matchLabels:
+        name: restic
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          component: velero
+          name: restic
+      spec:
+        containers:
+        - args:
+          - restic
+          - server
+          command:
+          - /velero
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: VELERO_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: VELERO_SCRATCH_DIR
+            value: /scratch
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /credentials/cloud
+          - name: AWS_SHARED_CREDENTIALS_FILE
+            value: /credentials/cloud
+          - name: AZURE_CREDENTIALS_FILE
+            value: /credentials/cloud
+          image: velero/velero:v1.2.0
+          imagePullPolicy: IfNotPresent
+          name: restic
+          resources: {}
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /host_pods
+            mountPropagation: HostToContainer
+            name: host-pods
+          - mountPath: /scratch
+            name: scratch
+          - mountPath: /credentials
+            name: cloud-credentials
+        securityContext:
+          runAsUser: 0
+        serviceAccountName: velero
+        volumes:
+        - hostPath:
+            path: /var/lib/kubelet/pods
+          name: host-pods
+        - emptyDir: {}
+          name: scratch
+        - name: cloud-credentials
+          secret:
+            secretName: cloud-credentials
+    updateStrategy: {}
+kind: List

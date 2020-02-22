@@ -1,0 +1,13 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: nginx-stateless
+  labels:
+    velero.io/storage-location: default
+  namespace: velero
+spec:
+  hooks: {}
+  includedNamespaces:
+  - nginx-example
+  storageLocation: default
+  ttl: 720h0m0s
