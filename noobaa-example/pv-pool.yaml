@@ -1,0 +1,43 @@
+---
+apiVersion: noobaa.io/v1alpha1
+kind: BackingStore
+metadata:
+  finalizers:
+  - noobaa.io/finalizer
+  labels:
+    app: noobaa
+  name: mcg-pv-pool-bs
+  namespace: noobaa
+spec:
+  pvPool:
+    numVolumes: 3
+    resources:
+      requests:
+        storage: 100Gi
+    storageClass: gp2
+  type: pv-pool
+---
+apiVersion: noobaa.io/v1alpha1
+kind: BucketClass
+metadata:
+  labels:
+    app: noobaa
+  name: mcg-pv-pool-bc
+  namespace: noobaa
+spec:
+  placementPolicy:
+    tiers:
+    - backingStores:
+      - mcg-pv-pool-bs
+      placement: Spread
+---
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: velero-examples-storage
+  namespace: noobaa
+spec:
+  bucketName: velero-examples
+  storageClassName: velero-examples.noobaa.io
+  additionalConfig:
+    bucketclass: mcg-pv-pool-bc
