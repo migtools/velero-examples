@@ -35,8 +35,20 @@ items:
     config:
       region: us-east-2
     objectStorage:
-      bucket: velero-6f96b97ad72c184fb331459172bf4ccf
+      bucket: VELERO_BUCKET_NAME
       prefix: "velero"
+    provider: aws
+- apiVersion: velero.io/v1
+  kind: VolumeSnapshotLocation
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: default
+    namespace: velero
+  spec:
+    config:
+      region: us-east-2
     provider: aws
 - apiVersion: apps/v1
   kind: Deployment
