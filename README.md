@@ -33,8 +33,12 @@ Persistent application, backup/restore using Restic.
 
 [Stateful example](mysql-persistent/README.md)
 
-
 ## Application backup/restore with NooBaa
 
 [Stateful example with NooBaa](noobaa-example/README.md)
 
+## Stateful application backup/restore using snapshots (mssql)
+
+Persistent application, backup/restore using PV snapshots.
+
+[Stateful example](mssql-persistent/README.md)

@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: mssql-persistent
+  namespace: velero
+spec:
+  backupName: mssql-persistent
+  excludedResources:
+  - nodes
+  - events
+  - events.events.k8s.io
+  - backups.velero.io
+  - restores.velero.io
+  - resticrepositories.velero.io
+  restorePVs: true
