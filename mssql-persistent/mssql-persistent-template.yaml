@@ -124,13 +124,16 @@ spec:
      targetPort: 1433
  type: LoadBalancer
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
  name: mssql-app-deployment
  namespace: mssql-persistent
 spec:
  replicas: 1
+ selector:
+   matchLabels:
+     app: mssql-app
  template:
    metadata:
      labels:
