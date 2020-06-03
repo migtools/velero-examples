@@ -1,0 +1,79 @@
+- hosts: localhost
+  tasks:
+    - name: Create a pod
+      tags:
+        - pods
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: pgbench
+            namespace: postgresha
+            labels:
+              app: web
+          spec:
+            containers:
+            - name: pgbench-pod
+              image: quay.io/sagyvolkov/pgbench-container:0.1
+            ports:
+              containerPort: 8000
+              imagePullPolicy: Always
+      
+
+    - name: Create a Service object from an inline definition
+      tags:
+        - services 
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: web
+            namespace: postgresha
+            labels:
+              app: galaxy
+              service: web
+          spec:
+            selector:
+              app: galaxy
+              service: web
+            ports:
+            - protocol: TCP
+              targetPort: 8000
+              name: port-8000-tcp
+              port: 8000
+    - name: Create a Deployment by reading the definition from a local file
+      tags:
+        - deployment
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: sample
+            namespace: postgresha
+          spec:
+            selector:
+              matchLabels:
+                app: postgres-demo
+            replicas: 3
+            template:
+              metadata:
+                labels:
+                  app: postgres-demo
+              spec:
+                containers:
+                  - name: postgres-demo
+                    image: quay.io/sagyvolkov/pgbench-container:0.1
+                    ports:
+                      - containerPort: 8080
+
+
+
