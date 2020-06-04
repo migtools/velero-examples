@@ -73,13 +73,10 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: cassandra-data
-      annotations:
-        volume.beta.kubernetes.io/storage-class: gp2
       labels:
         app: cassandra
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: gp2
         resources:
           requests:
             storage: 1Gi
