@@ -11,4 +11,6 @@
         state: present
         src: cassandra-svc.yaml
     - name: Create a statefulset with the existing yaml
-      raw: oc apply -f cassandra-app.yaml
+      k8s:
+        state: present
+        src: cassandra-app.yaml
