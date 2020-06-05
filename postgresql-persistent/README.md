@@ -17,6 +17,15 @@ oc get pvc -n postgresql-persistent >> postgresql-running-before.txt
 oc get pv >> postgresql-running-before.txt
 ```
 
+## For installing/deleting specific resources(Pods, Service, Deployment etc..)
+Run the following command by replacing tags with suitable tag name as mentioned in yaml
+```
+ansible-playbook postgres-install.yaml --tags "tagname(s)"
+ansible-playbook postgres-delete.yaml --tags "tagname(s)"
+
+```
+
+
 ## Back up the application
 ```
 ansible-playbook postgres-backup.yaml
@@ -27,6 +36,7 @@ should show "Completed"). Then, run:
 ```
 ansible-playbook postgres-delete.yaml
 ```
+
 ## Restore the application.
 ```
 ansible-playbook postgres-restore.yaml

@@ -134,7 +134,7 @@
                     limits:
                       memory: 512Mi
                   volumeMounts:
-                  - mountPath: "/var/lib/psql/data"
+                  - mountPath: "/var/lib/pgsql/data"
                     name: postgresql-data
                 volumes:
                   - name: postgresql-data
