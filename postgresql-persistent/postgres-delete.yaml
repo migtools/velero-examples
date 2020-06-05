@@ -3,7 +3,7 @@
   tasks:   
     - name: Delete a deployment
       tags:
-        - ddeployment
+        - deleteDeployment
       k8s:
         state: absent
         kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
@@ -31,7 +31,7 @@
 
     - name: Delete a namespace
       tags:
-        - dnamespace
+        - deleteNamespace
       k8s:
         state: absent
         kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
@@ -45,7 +45,7 @@
 
     - name: Remove a service
       tags:
-        - dservice
+        - deleteService
       k8s:
         state: absent
         api_version: v1

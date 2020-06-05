@@ -3,7 +3,7 @@
   tasks:
     - name: Restore a backup
       tags:
-        - rbackup
+        - restoreBackup
       k8s:
         state: present
         kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
