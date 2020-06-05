@@ -1,0 +1,196 @@
+- hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create a namespace
+      tags:
+        - namespace
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: namespace
+          metadata: 
+            name: postgresql-persistent
+            labels:
+              app: postgresql
+              
+    - name: Claim a persistent volume claim
+      tags:
+        - pvclaim
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: postgresql
+            namespace: postgresql-persistent
+          spec:
+            storageClassName: gp2
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+                
+    - name: Create a secret
+      tags:
+        - secret
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: postgresql
+            namespace: postgresql-persistent
+            labels:
+              app: postgresql
+          stringData:
+            database-name: sampledb
+            database-password: password
+            database-user: user
+
+
+    - name: Create a pod
+      tags:
+        - pod
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: pgbench
+            namespace: postgresql-persistent
+            labels:
+              app: web
+          spec:
+            volumes:
+              - name: task-pv-storage
+                persistentVolumeClaim:
+                  claimName: postgresql
+            containers:
+            - name: pgbench-pod
+              image: quay.io/sagyvolkov/pgbench-container:0.1
+            ports:
+              containerPort: 5432
+              imagePullPolicy: Always
+              
+              
+    - name: Create a Deployment 
+      tags:
+        - deployment
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: postgresql
+            namespace: postgresql-persistent
+          spec:
+            selector:
+              matchLabels:
+                app: postgresql
+              name: postgresql
+            replicas: 2
+            template:
+              metadata:
+                annotations:
+                   backup.velero.io/backup-volumes: postgresql-data
+                labels:
+                  app: postgresql
+                  name: postgresql
+              spec:
+                containers:
+                - env:
+                  - name: user
+                    valueFrom:
+                      secretKeyRef:
+                        key: database-user
+                        name: postgresql
+                  - name: password
+                    valueFrom:
+                      secretKeyRef:
+                        key: database-password
+                        name: postgresql
+                  - name: sampledb
+                    valueFrom:
+                      secretKeyRef:
+                        key: database-name
+                        name: postgresql
+                  imagePullPolicy: IfNotPresent
+                  name: postgresql
+                  image: quay.io/sagyvolkov/pgbench-container:0.1
+                  ports:
+                  - containerPort: 5432  
+                  resources:
+                    limits:
+                      memory: 512Mi
+                  volumeMounts:
+                  - mountPath: "/var/lib/psql/data"
+                    name: postgresql-data
+                volumes:
+                  - name: postgresql-data
+                    persistentVolumeClaim:
+                      claimName: postgresql
+
+    - name: Create a Service object 
+      tags:
+        - service
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            annotations:
+              template.openshift.io/expose-uri: postgres://{.spec.clusterIP}:{.spec.ports[?(.name=="postgresql")].port}
+            name: postgresql
+            namespace: postgresql-persistent
+            labels:
+              app: postgresql 
+              service: postgresql
+          spec:
+            selector:
+              app: postgresql
+              service: postgresql
+              name: postgresql
+            ports:
+            - protocol: TCP
+              targetPort: 5432
+              name: postgresql
+              port: 5432
+              nodePort: 0
+
+    - name: Create a Route
+      tags:
+        - route
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiversion: v1
+          kind: Route
+          metadata:
+            name: web
+            namespace: postgresql-persistent
+            labels:
+              app: galaxy
+              service: web
+          spec:
+            host: web-postgresql-persistent.apps.cluster-dshah0518.dshah0518.mg.dog8code.com
+            to:
+              kind: Service
+              name: web
+            port:
+              targetPort: port-8000-tcp
+          
+    

@@ -1,0 +1,26 @@
+- hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Restore a backup
+      tags:
+        - rbackup
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: velero.io/v1
+          kind: Restore
+          metadata:
+            name: postgres-persistent
+            namespace: velero
+          spec:
+            backupName: postgres-persistent
+            excludedResources:
+            - nodes
+            - events
+            - events.events.k8s.io
+            - backups.velero.io
+            - restores.velero.io
+            - resticrepositories.velero.io
+            restorePVs: true
+

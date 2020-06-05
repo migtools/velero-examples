@@ -1,0 +1,23 @@
+- hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create a backup
+      tags:
+        - backup
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: velero.io/v1
+          kind: Backup
+          metadata:
+            name: postgres-persistent
+            labels:
+              velero.io/storage-location: default
+            namespace: velero
+          spec:
+            hooks: {}
+            includedNamespaces:
+              - postgresql-persistent
+            storageLocation: default
+            ttl: 720h0m0s
