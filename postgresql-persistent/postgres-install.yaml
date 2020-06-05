@@ -180,17 +180,17 @@
           apiversion: v1
           kind: Route
           metadata:
-            name: web
+            name: postgresql
             namespace: postgresql-persistent
             labels:
-              app: galaxy
-              service: web
+              app: postgresql
+              service: postgresql
           spec:
-            host: web-postgresql-persistent.apps.cluster-dshah0518.dshah0518.mg.dog8code.com
+            host: postgresql-postgresql-persistent.apps.cluster-dshah0518.dshah0518.mg.dog8code.com
             to:
               kind: Service
-              name: web
+              name: postgresql
             port:
-              targetPort: port-8000-tcp
+              targetPort: postgresql
           
     
