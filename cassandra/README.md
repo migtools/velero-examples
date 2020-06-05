@@ -2,7 +2,7 @@
 
 ## Create cassandra statefulset
 ```
-ansible-playbook cassandra-stateful.yaml
+ansible-playbook install.yaml
 ```
 ## Back up the application.
 ```
