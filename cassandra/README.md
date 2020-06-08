@@ -10,7 +10,7 @@ TODO
 ```
 ## Delete application.
 ```
-TODO
+ansible-playbook delete.yaml
 ```
 
 ## Restore the application.
