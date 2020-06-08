@@ -15,5 +15,5 @@ ansible-playbook delete.yaml
 
 ## Restore the application.
 ```
-TODO
+ansible-playbook restore.yaml
 ```
