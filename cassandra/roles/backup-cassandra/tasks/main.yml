@@ -1,0 +1,6 @@
+---
+- name: Create velero backup of cassandra
+  k8s:
+    state: present
+    kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+    definition: "{{ lookup('file', 'create-backup.yaml')}}"
