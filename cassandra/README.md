@@ -6,7 +6,7 @@ ansible-playbook install.yaml
 ```
 ## Back up the application.
 ```
-TODO
+ansible-playbook backup.yaml
 ```
 ## Delete application.
 ```
