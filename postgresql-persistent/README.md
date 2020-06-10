@@ -2,7 +2,14 @@
 
 The persistent case assumes the existence of the storageclass "gp2" --
 modify appropriately if this is incorrect for your cluster. Restic is
-used for PV backup.
+used for PV backup. This setup assumes you have KUBECONFIG properly configured.
+
+## For installing missing modules
+(for python3)
+```
+pip3 install kubernetes
+pip3 install openshift
+```
 
 ## Create stateful PostgreSQL deployment:
 ```
