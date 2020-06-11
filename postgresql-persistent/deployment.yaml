@@ -19,13 +19,14 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: postgres:9.6
+        image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
         imagePullPolicy: Always
         envFrom:
           - configMapRef:
               name: postgresql
-        ports:
-        - containerPort: 5432
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/pgsql/data
       volumes:
         - name: postgresql-data
           persistentVolumeClaim:
