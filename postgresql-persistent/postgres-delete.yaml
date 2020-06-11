@@ -11,21 +11,21 @@
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: sample
+            name: postgresql
             namespace: postgresql-persistent
           spec:
             selector:
               matchLabels:
-                app: postgresql-demo
-            replicas: 3
+                app: postgresql
+            replicas: 2
             template:
               metadata:
                 labels:
-                  app: postgresql-demo
+                  app: postgresql
               spec:
                 containers:
-                  - name: postgresql-demo
-                    image: quay.io/sagyvolkov/pgbench-container:0.1
+                  - name: postgresql
+                    image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
                     ports:
                       - containerPort: 8080
 
@@ -52,6 +52,5 @@
         kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
         kind: Service
         namespace: postgresql-persistent
-        name: web
-
+        name: postgresql
 

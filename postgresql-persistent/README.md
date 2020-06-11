@@ -31,12 +31,32 @@ ansible-playbook postgres-install.yaml --tags "tagname(s)"
 ansible-playbook postgres-delete.yaml --tags "tagname(s)"
 
 ```
+## For logging into the postgres database
+For host value to pass to psql, use the CLUSTER-IP of the service. To get that do
+
+```
+oc get svc
+```
+
+```
+oc rsh pgbench
+oc exec -it pgbench bash
+psql -U admin -W sampledb -h 172.30.87.66
+```
 
 
 ## Back up the application
+
 ```
 ansible-playbook postgres-backup.yaml
 ```
+If the backup fails, try to check your aws bucket location by
+```
+oc project velero
+oc edit volumesnapshotlocation
+```
+and change from us-east-2 to us-east-1 and vice versa based on your configuration of openshift installation bucket
+
 ## Delete the application.
 Make sure the backup is completed (`oc get backup -n velero postgres-persistent -o jsonpath='{.status.phase}'`
 should show "Completed"). Then, run:
@@ -60,4 +80,5 @@ oc get pv >> postgresql-running-after.txt
 
 ```
 Compare "postgresql-running-before.txt" and "postgresql-running-after.txt"
+
 
