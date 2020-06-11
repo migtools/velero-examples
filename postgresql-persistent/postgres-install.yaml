@@ -101,13 +101,10 @@
             name: postgresql
             namespace: postgresql-persistent
             labels:
-              app: postgresql 
-              service: postgresql
+              app: postgresql-bench 
           spec:
             selector:
-              app: postgresql
-              service: postgresql
-              name: postgresql
+              app: postgresql-bench
             ports:
             - protocol: TCP
               name: postgresql
