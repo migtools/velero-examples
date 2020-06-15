@@ -38,7 +38,7 @@ For host value to pass to psql, use the CLUSTER-IP of the service. To get that d
 oc get svc
 ```
 For logging in
-
+user/pass=admin/password
 ```
 oc rsh pgbench
 oc exec -it pgbench bash
