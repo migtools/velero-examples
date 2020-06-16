@@ -47,9 +47,8 @@ psql -U admin -W sampledb -h 172.30.87.66
 
 
 ## Back up the application
-
 ```
-ansible-playbook postgres-backup.yaml
+ansible-playbook postgres-backup.yaml -e velero_namespace=<VELERO_NAMESPACE>
 ```
 If the backup fails, try to check your aws bucket location by
 ```
@@ -69,7 +68,7 @@ ansible-playbook postgres-delete.yaml
 
 ## Restore the application.
 ```
-ansible-playbook postgres-restore.yaml
+ansible-playbook postgres-restore.yaml -e velero_namespace=<VELERO_NAMESPACE>
 ```
 
 ## Compare application state before/after.
