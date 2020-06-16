@@ -1,2 +1,3 @@
 ---
-# defaults file for restore-cassandra
+velero_namespace: "oadp-operator"
+backup_name: "cassandra"

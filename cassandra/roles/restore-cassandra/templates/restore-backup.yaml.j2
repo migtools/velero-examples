@@ -2,9 +2,9 @@ apiVersion: velero.io/v1
 kind: Restore
 metadata:
   name: cassandra
-  namespace: velero
+  namespace: "{{ velero_namespace }}"
 spec:
-  backupName: cassandra
+  backupName: "{{ backup_name }}"
   excludedResources:
     - nodes
     - events

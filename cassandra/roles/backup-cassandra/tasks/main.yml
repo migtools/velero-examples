@@ -3,4 +3,4 @@
   k8s:
     state: present
     kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
-    definition: "{{ lookup('file', 'create-backup.yaml')}}"
+    definition: "{{ lookup('template', 'create-backup.yaml.j2')}}"
