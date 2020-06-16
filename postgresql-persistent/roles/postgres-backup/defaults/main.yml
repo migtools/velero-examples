@@ -1,0 +1,3 @@
+---
+# defaults file for roles
+velero_namespace: "{{ lookup( 'env', 'WATCH_NAMESPACE') | default('oadp-operator') }}"
