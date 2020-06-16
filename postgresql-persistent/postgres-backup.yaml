@@ -2,3 +2,4 @@
   gather_facts: False
   roles:
     - postgres-backup
+

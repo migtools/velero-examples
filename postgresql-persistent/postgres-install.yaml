@@ -15,6 +15,7 @@
             labels:
               app: postgresql
               
+
     - name: Create a ConfigMap
       tags:
         - configmap
@@ -33,6 +34,7 @@
             POSTGRESQL_DATABASE: sampledb
             POSTGRESQL_USER: admin
             POSTGRESQL_PASSWORD: password
+
 
     - name: Claim a persistent volume claim
       tags:
@@ -53,7 +55,7 @@
             resources:
               requests:
                 storage: 2Gi
-        
+                
     - name: Create a pod
       tags:
         - pod
@@ -110,7 +112,6 @@
               name: postgresql
               port: 5432
             
-
     - name: Create a Route
       tags:
         - route
@@ -134,5 +135,3 @@
               targetPort: postgresql
           
 
-
-    

@@ -58,6 +58,8 @@ oc edit volumesnapshotlocation
 ```
 and change from us-east-2 to us-east-1 and vice versa based on your configuration of openshift installation bucket
 
+=======
+
 ## Delete the application.
 Make sure the backup is completed (`oc get backup -n velero postgres-persistent -o jsonpath='{.status.phase}'`
 should show "Completed"). Then, run:
@@ -81,5 +83,4 @@ oc get pv >> postgresql-running-after.txt
 
 ```
 Compare "postgresql-running-before.txt" and "postgresql-running-after.txt"
-
 

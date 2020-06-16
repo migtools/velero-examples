@@ -1,0 +1,16 @@
+- hosts: localhost
+  tasks:
+    - name: Create a namespace for cassandra
+      k8s:
+        name: cassandra-stateful
+        api_version: v1
+        kind: Namespace
+        state: present
+    - name: Create a service object required to provide network identity
+      k8s:
+        state: present
+        src: cassandra-svc.yaml
+    - name: Create a statefulset with the existing yaml
+      k8s:
+        state: present
+        src: cassandra-app.yaml
