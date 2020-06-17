@@ -1,6 +1,9 @@
 # Stateful backup/restore (cassandra)
 Assumes storageclass of "gp2". Modify appropriately if needed.
 
+Assumes the use of velero in the oadp-operator and creates cassandra
+in the namespace cassandra-stateful. Change Variables if needed to adjust.
+
 Uses ansible roles for each of the following functionality below.
 
 Execute each in velero-examples/cassandra.
@@ -10,7 +13,7 @@ ansible-playbook install.yaml
 ```
 ## Populate a sample database
 After the cassandra cluster is up, the following below
-will populate a sample database to test that
+will access the first node and populate a sample database to test that
 data persists during the backup and restore
 process.
 ```
@@ -54,4 +57,10 @@ ansible-playbook delete.yaml
 ## Restore the application.
 ```
 ansible-playbook restore.yaml
+```
+## Check that the data persists afer doing a backup and restore
+Note that connecting to the node after the restore will take some time.
+```
+oc exec -it cassandra-0 -- cqlsh
+SELECT * FROM classicmodels.offices;
 ```
