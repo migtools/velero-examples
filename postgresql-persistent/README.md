@@ -15,7 +15,10 @@ pip3 install openshift
 ```
 ansible-playbook postgres-install.yaml
 ```
-
+Switch to postgresql-persistent namespace.
+```
+oc project postgresql-persistent
+```
 
 ## Save state metadata prior to backup/restore.
 ```
@@ -52,12 +55,12 @@ ansible-playbook postgres-backup.yaml -e velero_namespace=<VELERO_NAMESPACE>
 ```
 If the backup fails, try to check your aws bucket location by
 ```
-oc project velero
+oc project <VELERO_NAMESPACE>
 oc edit volumesnapshotlocation
 ```
 and change from us-east-2 to us-east-1 and vice versa based on your configuration of openshift installation bucket
 
-=======
+
 
 ## Delete the application.
 Make sure the backup is completed (`oc get backup -n velero postgres-persistent -o jsonpath='{.status.phase}'`
