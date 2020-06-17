@@ -43,8 +43,10 @@ exit
 ansible-playbook backup.yaml
 ```
 ## Delete application.
-Make sure the backup is completed (`oc get backup -n velero cassandra -o jsonpath='{.status.phase}'`
+Make sure the backup is completed (`oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
 should show "Completed"). Then, run:
+---
+Note that "velero" should be replaced with whatever namespace velero is in.
 ```
 ansible-playbook delete.yaml
 ```
