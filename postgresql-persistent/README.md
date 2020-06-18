@@ -48,7 +48,25 @@ oc exec -it pgbench bash
 psql -U admin -W sampledb -h 172.30.87.66
 ```
 
+## Populate a sample database
+Login using the above commands to the database.
+To create a table and populate data in it, run the following
+```
+sampledb=> CREATE TABLE TEMP(id INTEGER PRIMARY KEY, name VARCHAR(10));
+sampledb=> INSERT INTO TEMP VALUES(1,'alex');
+```
+To check if the data was populated and table created, do
+```
+sampledb=> SELECT * FROM TEMP;
+sampledb=> \dt
+```
+The output of the table should be like this
+```
+ id | name 
+----+------
+  1 | alex
 
+```
 ## Back up the application
 ```
 ansible-playbook postgres-backup.yaml -e velero_namespace=<VELERO_NAMESPACE>
