@@ -1,8 +1,16 @@
 # Stateful application backup/restore (PostgreSQL)
 
 The persistent case assumes the existence of the storageclass "gp2" --
-modify appropriately if this is incorrect for your cluster. Restic is
-used for PV backup. This setup assumes you have KUBECONFIG properly configured.
+modify appropriately if this is incorrect for your cluster. This setup assumes you have KUBECONFIG properly configured.
+
+To use restic for PV backup, add the annotations in deployment.yaml
+```
+ template:
+  metadata:
+    annotations:
+       backup.velero.io/backup-volumes: postgresql-data
+```
+
 
 ## For installing missing modules
 (for python3)
