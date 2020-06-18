@@ -76,7 +76,7 @@ If the backup fails, try to check your aws bucket location by
 oc project <VELERO_NAMESPACE>
 oc edit volumesnapshotlocation
 ```
-and change from us-east-2 to us-east-1 and vice versa based on your configuration of openshift installation bucket
+and change your region based on your configuration of openshift installation bucket
 
 
 
