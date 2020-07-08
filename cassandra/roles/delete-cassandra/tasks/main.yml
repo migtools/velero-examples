@@ -1,0 +1,7 @@
+---
+- name: Deleting a namespace for cassandra
+  k8s:
+    name: "{{ cassandra_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent

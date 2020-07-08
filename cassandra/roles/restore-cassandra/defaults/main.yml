@@ -1,0 +1,3 @@
+---
+velero_namespace: "oadp-operator"
+backup_name: "cassandra"

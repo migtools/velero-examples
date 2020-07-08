@@ -1,0 +1,13 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: "{{ backup_name }}"
+  labels:
+    velero.io/storage-location: default
+  namespace: "{{ velero_namespace }}"
+spec:
+  hooks: {}
+  includedNamespaces:
+    - "{{ cassandra_namespace }}"
+  storageLocation: default
+  ttl: 720h0m0s

@@ -1,0 +1,17 @@
+---
+- name: Create a namespace for cassandra
+  k8s:
+    name: "{{ cassandra_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+- name: Add scc privileged to service account
+  raw: oc adm policy add-scc-to-user privileged -z default -n {{ cassandra_namespace }}
+- name: Create a service object required to provide network identity
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'cassandra-svc.yaml.j2') }}"
+- name: Create a statefulset with the existing yaml
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'cassandra-app.yaml.j2') }}"

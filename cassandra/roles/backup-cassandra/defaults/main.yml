@@ -1,0 +1,4 @@
+---
+cassandra_namespace: "cassandra-stateful"
+velero_namespace: "oadp-operator"
+backup_name: "cassandra"
