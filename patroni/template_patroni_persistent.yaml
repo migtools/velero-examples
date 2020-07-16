@@ -105,6 +105,11 @@ objects:
         labels:
           application: ${APPLICATION_NAME}
           cluster-name: ${PATRONI_CLUSTER_NAME}
+        annotations: 
+          pre.hook.backup.velero.io/command: '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]'
+          pre.hook.backup.velero.io/container: patroni-persistent
+          post.hook.backup.velero.io/command: '["/bin/bash", "-c", "pg_ctl start -D pgdata/pgroot/data && patronictl resume"]'
+          post.hook.backup.velero.io/container: patroni-persistent
       spec:
         initContainers:
         - command:
