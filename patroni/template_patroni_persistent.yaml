@@ -92,7 +92,7 @@ objects:
     name: ${APPLICATION_NAME}
   spec:
     podManagementPolicy: OrderedReady
-    replicas: 5
+    replicas: 3
     revisionHistoryLimit: 10
     selector:
       matchLabels:
@@ -108,7 +108,7 @@ objects:
         annotations: 
           pre.hook.backup.velero.io/command: '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]'
           pre.hook.backup.velero.io/container: patroni-persistent
-          post.hook.backup.velero.io/command: '["/bin/bash", "-c", "pg_ctl start -D pgdata/pgroot/data && patronictl resume"]'
+          post.hook.backup.velero.io/command: '["/bin/bash", "-c", "patronictl resume"]'
           post.hook.backup.velero.io/container: patroni-persistent
       spec:
         initContainers:
