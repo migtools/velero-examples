@@ -14,6 +14,8 @@ spec:
       app: cassandra
   template:
     metadata:
+      annotations:
+        pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "opt/cassandra/bin/nodetool drain"]'
       labels:
         app: cassandra
     spec:
