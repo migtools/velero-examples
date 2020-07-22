@@ -1,0 +1,57 @@
+- hosts: localhost
+  gather_facts: False
+  tasks:   
+    - name: Delete a deployment
+      tags:
+        - deleteDeployment
+      k8s:
+        state: absent
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: sample
+            namespace: postgresql-persistent
+          spec:
+            selector:
+              matchLabels:
+                app: postgresql-demo
+            replicas: 3
+            template:
+              metadata:
+                labels:
+                  app: postgresql-demo
+              spec:
+                containers:
+                  - name: postgresql-demo
+                    image: quay.io/sagyvolkov/pgbench-container:0.1
+                    ports:
+                      - containerPort: 8080
+
+    - name: Delete a namespace
+      tags:
+        - deleteNamespace
+      k8s:
+        state: absent
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: namespace
+          metadata:
+            name: postgresql-persistent
+            labels:
+              app: postgresql
+
+    - name: Remove a service
+      tags:
+        - deleteService
+      k8s:
+        state: absent
+        api_version: v1
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        kind: Service
+        namespace: postgresql-persistent
+        name: web
+
+
