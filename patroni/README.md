@@ -1,36 +1,21 @@
 # Patroni
 Patroni is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Database engineers, DBAs, DevOps engineers, and SREs who are looking to quickly deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it useful.
 
-# Installation
-## Create project
+## Installation
+
+<b>Note:</b> Check your AWS VSL location and change your region based on your configuration if the velero backup fails.
+
+To install patroni run the following commands,
 
 ```
 oc new-project patroni
-```
-
-## Create the Template
-Install the template into the `openshift` namespace if this should be shared across projects: 
-
-```
-oc create -f template_patroni_persistent.yaml
-```
-## Create a new app
-
-```
+oc create -f template_patroni_persistent.yaml -n openshift
 oc new-app patroni-pgsql-persistent 
-```
-## Create pgbench pod
-```
 oc create -f pgbench.yaml
 ```
-## Save state metadata prior to backup/restore.
-```
-oc get all -n patroni > patroni-running-before.txt
-oc get pvc -n patroni >> patroni-running-before.txt
-oc get pv >> patroni-running-before.txt
-```
-## For logging into the postgres database
-For host value to pass to psql, use the CLUSTER-IP of the service. To get that do
+
+## Logging and populating database
+For host value to pass to psql, use the CLUSTER-IP of the master pod. To get that do
 
 ```
 oc get svc
@@ -39,46 +24,57 @@ NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)  
 patroni-persistent           ClusterIP   172.30.88.252   <none>        5432/TCP   20h
 patroni-persistent-master    ClusterIP   172.30.51.69    <none>        5432/TCP   20h
 patroni-persistent-replica   ClusterIP   172.30.0.120    <none>        5432/TCP   20h
-
 ```
-For logging in
 
-user/pass=postgres/postgres
+<b>Note:</b> Master IP opens a connection with read/write access while replica IP opens a connection with read access.
+
+
+
+Populate the database by logging into pgbench pod. The password for logging in is `postgres`.
 ```
 oc rsh pgbench
 psql -U postgres -h 172.30.51.69
 ```
-Note: using master IP opens a connection with read/write access, using replica IP opens a connection with read access.
 
-## Populate database
-Login using the above commands to the database.
 To create a table and populate data in it, run the following
 ```
 postgres=> CREATE TABLE TEMP(id INTEGER PRIMARY KEY, name VARCHAR(10));
 postgres=> INSERT INTO TEMP VALUES(1,'alex');
 ```
-To check if the data was populated and table created, do
+
+To check if the data was populated do
 ```
 postgres=> SELECT * FROM TEMP;
-postgres=> \dt
 ```
-The output of the table should be like this
+The output of the table should look like this
 ```
  id | name 
 ----+------
   1 | alex
 
 ```
+
+## Quiescing the database
+
+Velero hooks enable the execution of terminal commands before and after resources are backed up. Before a backup, "pre" hooks are used to freeze resources, so that they are not modified as the backup is taking place. After a backup, "post" hooks are used to unfreeze those resources so that can altered again.
+
+
+The Velero hooks are specified as annotations in the template.
+
+These lines specify the "pre" hook to freeze resources:
+
+pre.hook.backup.velero.io/command: '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]'
+pre.hook.backup.velero.io/container: patroni-persistent
+
+These lines specify the "post" hook to unfreeze them:
+
+post.hook.backup.velero.io/command: '["/bin/bash", "-c", "patronictl resume"]'
+post.hook.backup.velero.io/container: patroni-persistent
+
 ## Back up the application
 ```
 oc create -f postgres-backup.yaml 
 ```
-If the backup fails, try to check your aws bucket location by
-```
-oc project <VELERO_NAMESPACE>
-oc edit volumesnapshotlocation
-```
-and change your region based on your configuration of openshift installation bucket
 
 ## Delete the application.
 Make sure the backup is completed (`oc get backup -n velero patroni -o jsonpath='{.status.phase}'`
@@ -92,18 +88,4 @@ oc delete namespace patroni
 oc create -f postgres-restore.yaml 
 ```
 
-## Compare application state before/after.
-Make sure the restore is completed (`oc get restore -n velero patroni -o jsonpath='{.status.phase}'`)
-should show "Completed", and the application pod should be
-running. Now run:
-```
-oc get all -n patroni-persistent > patroni-running-after.txt
-oc get pvc -n patroni-persistent >> patroni-running-after.txt
-oc get pv >> patroni-running-after.txt
-
-```
-Compare "patroni-running-before.txt" and "patroni-running-after.txt"
-
-
-# Quiescing the database
 
