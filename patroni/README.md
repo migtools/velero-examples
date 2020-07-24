@@ -19,7 +19,8 @@ For host value to pass to psql, use the CLUSTER-IP of the master pod. To get tha
 
 ```
 oc get svc
-
+```
+```
 NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
 patroni-persistent           ClusterIP   172.30.88.252   <none>        5432/TCP   20h
 patroni-persistent-master    ClusterIP   172.30.51.69    <none>        5432/TCP   20h
@@ -59,17 +60,21 @@ The output of the table should look like this
 Velero hooks enable the execution of terminal commands before and after resources are backed up. Before a backup, "pre" hooks are used to freeze resources, so that they are not modified as the backup is taking place. After a backup, "post" hooks are used to unfreeze those resources so that can altered again.
 
 
-The Velero hooks are specified as annotations in the template.
+- The Velero hooks are specified as annotations in the template.
 
 These lines specify the "pre" hook to freeze resources:
 
+```
 pre.hook.backup.velero.io/command: '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]'
 pre.hook.backup.velero.io/container: patroni-persistent
+```
 
 These lines specify the "post" hook to unfreeze them:
 
+```
 post.hook.backup.velero.io/command: '["/bin/bash", "-c", "patronictl resume"]'
 post.hook.backup.velero.io/container: patroni-persistent
+```
 
 ## Back up the application
 ```
