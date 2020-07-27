@@ -9,10 +9,22 @@ To install patroni run the following commands,
 
 ```
 oc new-project patroni
-oc new-build https://github.com/zalando/patroni --context-dir=kubernetes -n openshift
+oc new-build . -n patroni --name=patroni
 oc create -f template_patroni_persistent.yaml -n openshift
 oc new-app patroni-pgsql-persistent 
 oc create -f pgbench.yaml
+```
+
+
+The command `oc new-build . -n patroni --name=patroni` pushes the image to internal image registry. To check that, run the following commands,
+
+```
+$ oc get istag
+NAME             IMAGE REFERENCE                                                                                                                            UPDATED
+patroni:latest   image-registry.openshift-image-registry.svc:5000/patroni/patroni@sha256:d879c4f6502cc48b69d4aceefa4ff166b2900ff8d11b30937c59da20e3711aa5   44 seconds ago
+$ oc get is
+NAME      IMAGE REPOSITORY                                                   TAGS     UPDATED
+patroni   image-registry.openshift-image-registry.svc:5000/patroni/patroni   latest   50 seconds ago
 ```
 
 ## Logging and populating database
