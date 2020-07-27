@@ -60,17 +60,19 @@ oc exec -it cassandra-0 -- cqlsh
 Connection error: ('Unable to connect to any servers', {'127.0.0.1': error(111, "Tried connecting to [('127.0.0.1', 9042)]. Last error: Connection refused")})
 command terminated with exit code 1.
 
-After the backup, lets see that sstables are now in our sstables.
+We can also see that the data is now in our sstables.
 ```
 oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
 ```
 A similar output should look like this
 /var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db
 
-## Delete application.Make sure the backup is completed (`oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
-should show "Completed"). Then, run:
+## Delete application.
+Make sure the backup is completed `oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
+should show "Completed".
 ---
-Note that "velero" should be replaced with whatever namespace velero is in.
+Note that "velero" should be replaced with whatever namespace velero is in.  
+Then, run:
 ```
 ansible-playbook delete.yaml
 ```
