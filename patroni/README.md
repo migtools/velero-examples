@@ -9,6 +9,7 @@ To install patroni run the following commands,
 
 ```
 oc new-project patroni
+oc new-build https://github.com/zalando/patroni --context-dir=kubernetes -n openshift
 oc create -f template_patroni_persistent.yaml -n openshift
 oc new-app patroni-pgsql-persistent 
 oc create -f pgbench.yaml
