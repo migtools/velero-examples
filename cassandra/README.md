@@ -29,7 +29,6 @@ INSERT into offices(officeCode, city, phone, addressLine1, addressLine2, state, 
 ('1','San Francisco','+1 650 219 4782','100 Market Street','Suite 300','CA','USA','94080','NA');
 ```
 Verify that the data was populated.
-<<<<<<< HEAD
 ```
 SELECT * FROM classicmodels.offices;
 ```
@@ -42,30 +41,22 @@ We can now exit the shell by simply exiting.
 ```
 exit
 ```
-To start the quiesce feature in cassandra, we need to run the command Drain that flushes all memory from memtables in cassandra into
-immutable sstables. Note this is specific to how cassandra handles storing data. Drain will also stop listening for connections from the client and other nodes.
-nodetool. Nodetool will also be used to verifiy the data were flushed to files and replicated across the nodes at the end.
+To start the quiesce behavior in cassandra, we need to run the command `nodetool flush` that flushes all memory from memtables in cassandra into
+immutable files called sstables. Note this is specific to how cassandra handles storing data and achieving data consistency. 
+* Calling Nodetool Flush will stop listening for connections from the client and other nodes.
+* Nodetool will also be used to verifiy the data were flushed to files and replicated across the nodes at the end.
 
-From here we could manually quiesce cassandra by doing (`oc exec -it cassandra-0 -- nodetool drain` but when we do our backup, we have used velero hooks to do that instead pre-backup.
+From here we could manually quiesce cassandra by doing (`oc exec -it cassandra-0 -- nodetool flush` but when we do our backup, we have used velero hooks to do that instead pre-backup.
 ## Back up the application.
 ```
 ansible-playbook backup.yaml
 ```
-After taking the backup of cassandra, lets also verify that cassandra has stop
-listening for connections. This means writes have also stopped occurring temporarily. Try to access the cqlsh again. The following command should be an 
-error like the following below after executing the command.
-```
-oc exec -it cassandra-0 -- cqlsh
-```
-Connection error: ('Unable to connect to any servers', {'127.0.0.1': error(111, "Tried connecting to [('127.0.0.1', 9042)]. Last error: Connection refused")})
-command terminated with exit code 1.
-
-We can also see that the data is now in our sstables.
+We can now see that the data is now on disk
 ```
 oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
 ```
-A similar output should look like this
-/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db
+A similar output should look like this  
+`/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db`
 
 ## Delete application.
 Make sure the backup is completed `oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
