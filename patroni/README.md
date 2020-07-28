@@ -1,9 +1,12 @@
 # Patroni
-Patroni is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Database engineers, DBAs, DevOps engineers, and SREs who are looking to quickly deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it useful.
+Patroni is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility 
+- a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. 
+Database engineers, DBAs, DevOps engineers, and SREs who are looking to quickly 
+deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it useful.
 
 ## Installation
-
-<b>Note:</b> Check your AWS VSL location and change your region based on your configuration if the velero backup fails.
+The setup assumes you have installed velero in oadp-operator namespace. If velero is installed in other namespace, 
+change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files.
 
 To install patroni run the following commands,
 
@@ -14,7 +17,6 @@ oc create -f template_patroni_persistent.yaml -n openshift
 oc new-app patroni-pgsql-persistent 
 oc create -f pgbench.yaml
 ```
-
 
 The command `oc new-build . -n patroni --name=patroni` pushes the image to internal image registry. To check that, run the following commands,
 
@@ -28,7 +30,7 @@ patroni   image-registry.openshift-image-registry.svc:5000/patroni/patroni   lat
 ```
 
 ## Logging and populating database
-For host value to pass to psql, use the CLUSTER-IP of the master pod. To get that do
+To get the service IPs of the PostgreSQL cluster, run:
 
 ```
 oc get svc
@@ -40,11 +42,10 @@ patroni-persistent-master    ClusterIP   172.30.51.69    <none>        5432/TCP 
 patroni-persistent-replica   ClusterIP   172.30.0.120    <none>        5432/TCP   20h
 ```
 
-<b>Note:</b> Master IP opens a connection with read/write access while replica IP opens a connection with read access.
+<b>Note:</b> You can use the patroni-persistent-master service to establish a read/write connection 
+while the patroni-persistent-replica service can be used to establish a read only connection.
 
-
-
-Populate the database by logging into pgbench pod. The password for logging in is `postgres`.
+We are logging into PostgreSQL from the pgbench pod. The password for logging in is `postgres`.
 ```
 oc rsh pgbench
 psql -U postgres -h 172.30.51.69
@@ -70,13 +71,23 @@ The output of the table should look like this
 
 ## Quiescing the database
 
-Velero hooks enable the execution of terminal commands before and after resources are backed up. Before a backup, "pre" hooks are used to freeze resources, so that they are not modified as the backup is taking place. After a backup, "post" hooks are used to unfreeze those resources so that can altered again.
+Velero hooks enable the execution of terminal commands before and after resources are backed up. 
+Before a backup, "pre" hooks are used to freeze resources, so that they are not modified as the backup is taking place. 
+After a backup, "post" hooks are used to unfreeze those resources so so they can accept new transactions.
 
 
-- The Velero hooks are specified as annotations in the template.
+- The Velero hooks are specified as annotations on the resource. The command to annotate it using oc is:
+```
+oc annotate pod -n patroni \
+    pre.hook.backup.velero.io/command= '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]' \
+    pre.hook.backup.velero.io/container=patroni-persistent \
+    post.hook.backup.velero.io/command='["/bin/bash", "-c", "patronictl resume"]'\
+    post.hook.backup.velero.io/container=patroni-persistent
+```
 
 These lines specify the "pre" hook to freeze resources:
 
+The container specifies where the command should be executed. Patronictl pause stops down the patroni cluster and pg_ctl stop shuts down the server running in the specified data directory.
 ```
 pre.hook.backup.velero.io/command: '["/bin/bash", "-c","patronictl pause && pg_ctl stop -D pgdata/pgroot/data"]'
 pre.hook.backup.velero.io/container: patroni-persistent
@@ -84,6 +95,7 @@ pre.hook.backup.velero.io/container: patroni-persistent
 
 These lines specify the "post" hook to unfreeze them:
 
+The container specifies where the command should be executed. Patronictl resume starts up the patroni cluster.
 ```
 post.hook.backup.velero.io/command: '["/bin/bash", "-c", "patronictl resume"]'
 post.hook.backup.velero.io/container: patroni-persistent
