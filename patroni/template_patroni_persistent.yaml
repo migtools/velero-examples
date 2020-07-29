@@ -116,7 +116,7 @@ objects:
           - sh
           - -c 
           - "mkdir -p /home/postgres/pgdata/pgroot/data && chmod 0700 /home/postgres/pgdata/pgroot/data"
-          image: image-registry.openshift-image-registry.svc:5000/patroni/velero-examples
+          image: image-registry.openshift-image-registry.svc:5000/patroni/patroni
           imagePullPolicy: Always
           name: fix-perms
           resources: {}
@@ -168,7 +168,7 @@ objects:
             value: 0.0.0.0:5432
           - name: PATRONI_RESTAPI_LISTEN
             value: 0.0.0.0:8008
-          image: image-registry.openshift-image-registry.svc:5000/patroni/velero-examples
+          image: image-registry.openshift-image-registry.svc:5000/patroni/patroni
           imagePullPolicy: Always
           name: ${APPLICATION_NAME}
           ports:

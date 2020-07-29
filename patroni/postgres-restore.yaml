@@ -6,6 +6,7 @@ metadata:
 spec:
   backupName: patroni
   excludedResources:
+  - imagetag
   - nodes
   - events
   - events.events.k8s.io

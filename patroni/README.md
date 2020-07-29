@@ -4,16 +4,44 @@ a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes.
 Database engineers, DBAs, DevOps engineers, and SREs who are looking to quickly 
 deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it useful.
 
+
+## Ceph Storage Class
+- Ceph is used as the default storageclass which helps velero to take csi snapshots of backups. Check if velero has csi plugins registered to it by this command,
+
+```
+velero get plugins | grep "csi"
+```
+```
+velero.io/csi-pvc-backupper                            BackupItemAction
+velero.io/csi-volumesnapshot-backupper                 BackupItemAction
+velero.io/csi-volumesnapshotclass-backupper            BackupItemAction
+velero.io/csi-volumesnapshotcontent-backupper          BackupItemAction
+velero.io/csi-pvc-restorer                             RestoreItemAction
+velero.io/csi-volumesnapshot-restorer                  RestoreItemAction
+velero.io/csi-volumesnapshotclass-restorer             RestoreItemAction
+velero.io/csi-volumesnapshotcontent-restorer           RestoreItemAction
+```
+
+<b>Note:</b> Run the following command `oc edit volumesnapshotclass` and change the field `deletionPolicy` to `Retain`.
+
+```
+apiVersion: snapshot.storage.k8s.io/v1beta1
+deletionPolicy: Retain
+driver: rook-ceph.rbd.csi.ceph.com
+kind: VolumeSnapshotClass
+```
+
 ## Installation
 The setup assumes you have installed velero in oadp-operator namespace. If velero is installed in other namespace, 
-change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files.
+change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files. To apply template in different namespace apart from patroni(like openshift),
+follow the steps in the [link](https://docs.openshift.com/online/starter/openshift_images/managing_images/using-image-pull-secrets.html#images-allow-pods-to-reference-images-across-projects_using-image-pull-secrets)
 
 To install patroni run the following commands,
 
 ```
 oc new-project patroni
 oc new-build . -n patroni --name=patroni
-oc create -f template_patroni_persistent.yaml -n openshift
+oc create -f template_patroni_persistent.yaml -n patroni
 oc new-app patroni-pgsql-persistent 
 oc create -f pgbench.yaml
 ```
@@ -106,6 +134,18 @@ post.hook.backup.velero.io/container: patroni-persistent
 oc create -f postgres-backup.yaml 
 ```
 
+To check if the CSI snapshots are created after backup, run the following command:
+```
+oc get volumesnapshotcontent
+```
+```
+NAME                                                              READYTOUSE   RESTORESIZE   DELETIONPOLICY   DRIVER                       VOLUMESNAPSHOTCLASS       VOLUMESNAPSHOT                                         AGE
+snapcontent-24ef293e-68b1-4f01-8d9b-673d20c6b423                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-0-6l8rf   46m
+snapcontent-bea37537-a585-4c5d-a02d-ce1067f067a8                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   45m
+snapcontent-c0e5a49b-e5d8-4235-8f90-96f2eedf2d04                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-1-q7nj6   46m
+snapcontent-d1104635-17d9-4c83-82e4-94032b31054e                  true         2147483648    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-8gx2g                                   44m
+```
+
 ## Delete the application.
 Make sure the backup is completed (`oc get backup -n velero patroni -o jsonpath='{.status.phase}'`
 should show "Completed"). Then, run:
@@ -117,5 +157,19 @@ oc delete namespace patroni
 ```
 oc create -f postgres-restore.yaml 
 ```
-
+To check if the CSI snapshots are created after restore, run the following command:
+```
+oc get volumesnapshotcontent
+```
+```
+NAME                                                              READYTOUSE   RESTORESIZE   DELETIONPOLICY   DRIVER                       VOLUMESNAPSHOTCLASS       VOLUMESNAPSHOT                                         AGE
+snapcontent-24ef293e-68b1-4f01-8d9b-673d20c6b423                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-0-6l8rf   46m
+snapcontent-bea37537-a585-4c5d-a02d-ce1067f067a8                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   45m
+snapcontent-c0e5a49b-e5d8-4235-8f90-96f2eedf2d04                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-1-q7nj6   46m
+snapcontent-d1104635-17d9-4c83-82e4-94032b31054e                  true         2147483648    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-8gx2g                                   44m
+velero-velero-patroni-8gx2g-hhgd2                                 true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-8gx2g                                   40m
+velero-velero-patroni-persistent-patroni-persistent-0-6l8rcppgv   true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-0-6l8rf   17m
+velero-velero-patroni-persistent-patroni-persistent-1-q7njpv44s   true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-1-q7nj6   17m
+velero-velero-patroni-persistent-patroni-persistent-2-hk4pv8mgz   true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   17m
+```
 

@@ -5,7 +5,6 @@ metadata:
   name: patroni
   namespace: patroni
 spec:
-  storageClassName: gp2
   accessModes:
     - ReadWriteOnce
   resources:
