@@ -6,6 +6,9 @@ deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it u
 
 
 ## Ceph Storage Class
+Rook operator is installed to provide ceph storage-class. PVC is created which internally creates PV coming from ceph because of it's `VOLUMEBINDINGMODE`. The pgbench pod is spawned 
+which makes use of that PVC. Velero has csi plugins registered to it because of which it creates csi snapshot on using commands `oc create -f postgres-backup.yaml` and `oc create -f postgres-restore.yaml`.
+
 - Ceph is used as the default storageclass which helps velero to take csi snapshots of backups. Check if velero has csi plugins registered to it by this command,
 
 ```
@@ -33,8 +36,8 @@ kind: VolumeSnapshotClass
 The setup assumes you have installed velero in oadp-operator namespace. If velero is installed in other namespace, 
 change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files. 
 
-<b>Note:</b>For allowing pods to reference `template_patroni_persistent.yaml` across projects 
-follow the steps in the [link](https://docs.openshift.com/online/starter/openshift_images/managing_images/using-image-pull-secrets.html#images-allow-pods-to-reference-images-across-projects_using-image-pull-secrets)
+<b>Note:</b> For allowing pods to reference `template_patroni_persistent.yaml` across projects 
+follow the steps in the [link](https://docs.openshift.com/online/starter/openshift_images/managing_images/using-image-pull-secrets.html#images-allow-pods-to-reference-images-across-projects_using-image-pull-secrets).
 
 To install patroni run the following commands,
 
@@ -168,4 +171,5 @@ velero-velero-patroni-persistent-patroni-persistent-0-6l8rcppgv   true         0
 velero-velero-patroni-persistent-patroni-persistent-1-q7njpv44s   true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-1-q7nj6   17m
 velero-velero-patroni-persistent-patroni-persistent-2-hk4pv8mgz   true         0             Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   17m
 ```
+
 
