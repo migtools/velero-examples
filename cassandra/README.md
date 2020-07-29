@@ -29,6 +29,7 @@ INSERT into offices(officeCode, city, phone, addressLine1, addressLine2, state, 
 ('1','San Francisco','+1 650 219 4782','100 Market Street','Suite 300','CA','USA','94080','NA');
 ```
 Verify that the data was populated.
+<<<<<<< HEAD
 ```
 SELECT * FROM classicmodels.offices;
 ```
@@ -41,22 +42,29 @@ We can now exit the shell by simply exiting.
 ```
 exit
 ```
-To start the quiesce behavior in cassandra, we need to run the command `nodetool flush` that flushes all memory from memtables in cassandra into
-immutable files called sstables. Note this is specific to how cassandra handles storing data and achieving data consistency. 
-* Calling Nodetool Flush will stop listening for connections from the client and other nodes.
-* Nodetool will also be used to verifiy the data were flushed to files and replicated across the nodes at the end.
+For the quiesce behavior in cassandra, we will be using Cassandra Nodetool. Nodetool provides
+a variety of utility to manage the cluster and perform database operations. Below will show how nodetool will be 
+used during the backup.
 
-From here we could manually quiesce cassandra by doing (`oc exec -it cassandra-0 -- nodetool flush` but when we do our backup, we have used velero hooks to do that instead pre-backup.
+Backup will look like the following with the nodetool operations being called.
+* Disable Gossip (Stops communication with other nodes)
+* Disable Thrift (Stops communication with one of the two protocols for listening to client)
+* Disable Binary (Stops communication with the other protocol for listening to client)
+* Nodetool flush is called to flush all memory to disk
+* Perform Backup
+* Enable Gossip, Thrift, and Binary (Start listening to connections again)
+
+Note we have used velero hooks that preforms all this during the backup.
 ## Back up the application.
 ```
 ansible-playbook backup.yaml
 ```
-We can now see that the data is now on disk
+We can see that the data is now in our sstables.
 ```
 oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
 ```
-A similar output should look like this  
-`/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db`
+A similar output should look like this
+/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db
 
 ## Delete application.
 Make sure the backup is completed `oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
