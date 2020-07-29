@@ -29,7 +29,6 @@ INSERT into offices(officeCode, city, phone, addressLine1, addressLine2, state, 
 ('1','San Francisco','+1 650 219 4782','100 Market Street','Suite 300','CA','USA','94080','NA');
 ```
 Verify that the data was populated.
-<<<<<<< HEAD
 ```
 SELECT * FROM classicmodels.offices;
 ```
@@ -64,13 +63,14 @@ We can see that the data is now in our sstables.
 oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
 ```
 A similar output should look like this
-/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db
+`/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db`
 
 ## Delete application.
-Make sure the backup is completed `oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
+Make sure the backup is completed  
+`oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
 should show "Completed".
 ---
-Note that "velero" should be replaced with whatever namespace velero is in.  
+Also note that "velero" should be replaced with whatever namespace velero is in.  
 Then, run:
 ```
 ansible-playbook delete.yaml
