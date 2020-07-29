@@ -9,9 +9,7 @@ deploy HA PostgreSQL in the datacenter-or anywhere else-will hopefully find it u
 - Ceph is used as the default storageclass which helps velero to take csi snapshots of backups. Check if velero has csi plugins registered to it by this command,
 
 ```
-velero get plugins | grep "csi"
-```
-```
+$ velero get plugins | grep "csi"
 velero.io/csi-pvc-backupper                            BackupItemAction
 velero.io/csi-volumesnapshot-backupper                 BackupItemAction
 velero.io/csi-volumesnapshotclass-backupper            BackupItemAction
@@ -33,7 +31,9 @@ kind: VolumeSnapshotClass
 
 ## Installation
 The setup assumes you have installed velero in oadp-operator namespace. If velero is installed in other namespace, 
-change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files. To apply template in different namespace apart from patroni(like openshift),
+change the `namespace` field in `postgres-backup.yaml` and `postgres-restore.yaml` files. 
+
+<b>Note:</b>For allowing pods to reference `template_patroni_persistent.yaml` across projects 
 follow the steps in the [link](https://docs.openshift.com/online/starter/openshift_images/managing_images/using-image-pull-secrets.html#images-allow-pods-to-reference-images-across-projects_using-image-pull-secrets)
 
 To install patroni run the following commands,
@@ -52,6 +52,8 @@ The command `oc new-build . -n patroni --name=patroni` pushes the image to inter
 $ oc get istag
 NAME             IMAGE REFERENCE                                                                                                                            UPDATED
 patroni:latest   image-registry.openshift-image-registry.svc:5000/patroni/patroni@sha256:d879c4f6502cc48b69d4aceefa4ff166b2900ff8d11b30937c59da20e3711aa5   44 seconds ago
+```
+```
 $ oc get is
 NAME      IMAGE REPOSITORY                                                   TAGS     UPDATED
 patroni   image-registry.openshift-image-registry.svc:5000/patroni/patroni   latest   50 seconds ago
@@ -61,9 +63,7 @@ patroni   image-registry.openshift-image-registry.svc:5000/patroni/patroni   lat
 To get the service IPs of the PostgreSQL cluster, run:
 
 ```
-oc get svc
-```
-```
+$ oc get svc
 NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
 patroni-persistent           ClusterIP   172.30.88.252   <none>        5432/TCP   20h
 patroni-persistent-master    ClusterIP   172.30.51.69    <none>        5432/TCP   20h
@@ -136,9 +136,7 @@ oc create -f postgres-backup.yaml
 
 To check if the CSI snapshots are created after backup, run the following command:
 ```
-oc get volumesnapshotcontent
-```
-```
+$ oc get volumesnapshotcontent
 NAME                                                              READYTOUSE   RESTORESIZE   DELETIONPOLICY   DRIVER                       VOLUMESNAPSHOTCLASS       VOLUMESNAPSHOT                                         AGE
 snapcontent-24ef293e-68b1-4f01-8d9b-673d20c6b423                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-0-6l8rf   46m
 snapcontent-bea37537-a585-4c5d-a02d-ce1067f067a8                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   45m
@@ -159,9 +157,7 @@ oc create -f postgres-restore.yaml
 ```
 To check if the CSI snapshots are created after restore, run the following command:
 ```
-oc get volumesnapshotcontent
-```
-```
+$ oc get volumesnapshotcontent
 NAME                                                              READYTOUSE   RESTORESIZE   DELETIONPOLICY   DRIVER                       VOLUMESNAPSHOTCLASS       VOLUMESNAPSHOT                                         AGE
 snapcontent-24ef293e-68b1-4f01-8d9b-673d20c6b423                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-0-6l8rf   46m
 snapcontent-bea37537-a585-4c5d-a02d-ce1067f067a8                  true         5368709120    Retain           rook-ceph.rbd.csi.ceph.com   csi-rbdplugin-snapclass   velero-patroni-persistent-patroni-persistent-2-hk4pk   45m
