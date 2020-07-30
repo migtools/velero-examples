@@ -20,7 +20,6 @@ bootstrap:
   - data-checksums
   pg_hba:
   - host all all 0.0.0.0/0 md5
-  - host replication all 0.0.0.0/0 trust
   - host replication ${PATRONI_REPLICATION_USERNAME} ${PATRONI_KUBERNETES_POD_IP}/16 md5
 restapi:
   connect_address: '${PATRONI_KUBERNETES_POD_IP}:8008'
