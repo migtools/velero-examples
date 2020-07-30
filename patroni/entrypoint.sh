@@ -19,11 +19,8 @@ bootstrap:
   - locale: en_US.UTF-8
   - data-checksums
   pg_hba:
-<<<<<<< HEAD
-  - host all all 0.0.0.0/0 tust
-=======
   - host all all 0.0.0.0/0 trust
->>>>>>> 6a26ecca80d16a4cdca0f3a209110eff64b83d02
+  - host all all 0.0.0.0/0 md5
   - host replication ${PATRONI_REPLICATION_USERNAME} ${PATRONI_KUBERNETES_POD_IP}/16 md5
 restapi:
   connect_address: '${PATRONI_KUBERNETES_POD_IP}:8008'
