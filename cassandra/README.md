@@ -53,7 +53,12 @@ Backup will look like the following with the nodetool operations being called.
 * Perform Backup
 * Enable Gossip, Thrift, and Binary (Start listening to connections again)
 
-Note we have used velero hooks that preforms all this during the backup.
+Note we have used velero hooks that preforms all this during the backup. They will look like this.
+Prehooks are commands executed before backup and posthooks are ones after backup.
+<pre>
+pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "opt/cassandra/bin/nodetool disablegossip && opt/cassandra/bin/nodetool disablethrift && opt/cassandra/bin/nodetool disablebinary && opt/cassandra/bin/nodetool flush"]'
+post.hook.backup.velero.io/command: '["/bin/bash", "-c", "opt/cassandra/bin/nodetool enablegossip && opt/cassandra/bin/nodetool enablethrift && opt/cassandra/bin/nodetool enablebinary"]'
+</pre>
 ## Back up the application.
 ```
 ansible-playbook backup.yaml
