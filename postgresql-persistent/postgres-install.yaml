@@ -15,6 +15,27 @@
             labels:
               app: postgresql
               
+
+    - name: Create a ConfigMap
+      tags:
+        - configmap
+      k8s:
+        state: present
+        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: postgresql
+            namespace: postgresql-persistent
+            labels:
+              app: postgresql
+          data:
+            POSTGRESQL_DATABASE: sampledb
+            POSTGRESQL_USER: admin
+            POSTGRESQL_PASSWORD: password
+
+
     - name: Claim a persistent volume claim
       tags:
         - pvclaim
@@ -35,26 +56,6 @@
               requests:
                 storage: 2Gi
                 
-    - name: Create a secret
-      tags:
-        - secret
-      k8s:
-        state: present
-        kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
-        definition:
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: postgresql
-            namespace: postgresql-persistent
-            labels:
-              app: postgresql
-          stringData:
-            database-name: sampledb
-            database-password: password
-            database-user: user
-
-
     - name: Create a pod
       tags:
         - pod
@@ -68,7 +69,7 @@
             name: pgbench
             namespace: postgresql-persistent
             labels:
-              app: web
+              app: postgresql
           spec:
             volumes:
               - name: task-pv-storage
@@ -80,67 +81,15 @@
             ports:
               containerPort: 5432
               imagePullPolicy: Always
-              
-              
+
     - name: Create a Deployment 
       tags:
         - deployment
       k8s:
         state: present
         kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: postgresql
-            namespace: postgresql-persistent
-          spec:
-            selector:
-              matchLabels:
-                app: postgresql
-              name: postgresql
-            replicas: 2
-            template:
-              metadata:
-                annotations:
-                   backup.velero.io/backup-volumes: postgresql-data
-                labels:
-                  app: postgresql
-                  name: postgresql
-              spec:
-                containers:
-                - env:
-                  - name: user
-                    valueFrom:
-                      secretKeyRef:
-                        key: database-user
-                        name: postgresql
-                  - name: password
-                    valueFrom:
-                      secretKeyRef:
-                        key: database-password
-                        name: postgresql
-                  - name: sampledb
-                    valueFrom:
-                      secretKeyRef:
-                        key: database-name
-                        name: postgresql
-                  imagePullPolicy: IfNotPresent
-                  name: postgresql
-                  image: quay.io/sagyvolkov/pgbench-container:0.1
-                  ports:
-                  - containerPort: 5432  
-                  resources:
-                    limits:
-                      memory: 512Mi
-                  volumeMounts:
-                  - mountPath: "/var/lib/pgsql/data"
-                    name: postgresql-data
-                volumes:
-                  - name: postgresql-data
-                    persistentVolumeClaim:
-                      claimName: postgresql
-
+        src: deployment.yaml
+        
     - name: Create a Service object 
       tags:
         - service
@@ -155,19 +104,14 @@
             namespace: postgresql-persistent
             labels:
               app: postgresql 
-              service: postgresql
           spec:
             selector:
               app: postgresql
-              service: postgresql
-              name: postgresql
             ports:
             - protocol: TCP
-              targetPort: 5432
               name: postgresql
               port: 5432
-              nodePort: 0
-
+            
     - name: Create a Route
       tags:
         - route
@@ -190,4 +134,4 @@
             port:
               targetPort: postgresql
           
-    
+

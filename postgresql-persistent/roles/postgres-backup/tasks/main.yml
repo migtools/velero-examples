@@ -1,0 +1,10 @@
+---
+# tasks file for roles
+- name: Create a backup
+  tags:
+    - backup
+  k8s:
+    state: present
+    kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+    definition: "{{ lookup('template', 'postgres-backup.yaml.j2') }}"
+

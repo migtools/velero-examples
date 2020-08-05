@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: patroni
+  namespace: patroni
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pgbench
+  namespace: patroni
+  labels:
+    app: postgresql
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: patroni
+  containers:
+  - name: pgbench-pod
+    image: quay.io/sagyvolkov/pgbench-container:0.1
+  ports:
+    containerPort: 5432
+    imagePullPolicy: Always
+

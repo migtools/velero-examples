@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  namespace: postgresql-persistent
+  labels:
+    app: postgresql
+spec:
+  selector:
+    matchLabels:
+      app: postgresql
+    name: postgresql
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        name: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
+        imagePullPolicy: Always
+        envFrom:
+          - configMapRef:
+              name: postgresql
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/pgsql/data
+      volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: postgresql
+
