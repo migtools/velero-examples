@@ -41,45 +41,42 @@ We can now exit the shell by simply exiting.
 ```
 exit
 ```
-At this stage in the backup and restore, we want to ensure that the data we just created will be consistent and reliable.
-In order to achieve that, we need to able to quiesce cassandra. We can achieve this in cassandra by using a cassandra tool called
-nodetool. This will allow us to flush memory onto what are called sstables that store the data in immutable files. 
-Nodetool also has features that verifies the files were flushed and replicated across the nodes.
+For the quiesce behavior in cassandra, we will be using Cassandra Nodetool. Nodetool provides
+a variety of utility to manage the cluster and perform database operations. Below will show how nodetool will be 
+used during the backup.
 
-To start the quiesce feature in cassandra, we need to run the command Drain that flushes all memory from memtables in cassandra into
-immutable sstables. Drain will also stop listening for connections from the client and other nodes.
+Backup will look like the following with the nodetool operations being called.
+* Disable Gossip (Stops communication with other nodes)
+* Disable Thrift (Stops communication with one of the two protocols for listening to client)
+* Disable Binary (Stops communication with the other protocol for listening to client)
+* Nodetool flush is called to flush all memory to disk
+* Perform Backup
+* Enable Gossip, Thrift, and Binary (Start listening to connections again)
 
-Verify first that the data isn't in our sstabless yet. There should be no output printed after running nodetool getsstables.
-Once that happens, then drain the data to them.
-
-```
-oc exec -it cassandra-0 -- nodetool getsstables classicmodels offices 1
-oc exec -it cassandra-0 -- nodetool drain
-```
-Now before we take a backup of cassandra, lets also verify that cassandra has stop
-listening for connections. Try to access the cqlsh again. The following command should be an 
-error like the following below after executing the command.
-```
-oc exec -it cassandra-0 -- cqlsh
-```
-Connection error: ('Unable to connect to any servers', {'127.0.0.1': error(111, "Tried connecting to [('127.0.0.1', 9042)]. Last error: Connection refused")})
-command terminated with exit code 1.
-
-Last thing before the backup, lets see that sstables have our data in .db files.
-```
-oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
-```
-A similar output should look like this
-/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db
+Note we have used velero hooks that preforms all this during the backup. They will look like this.
+Prehooks are commands executed before backup and posthooks are ones after backup.
+<pre>
+pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "opt/cassandra/bin/nodetool disablegossip && opt/cassandra/bin/nodetool disablethrift && opt/cassandra/bin/nodetool disablebinary && opt/cassandra/bin/nodetool flush"]'
+post.hook.backup.velero.io/command: '["/bin/bash", "-c", "opt/cassandra/bin/nodetool enablegossip && opt/cassandra/bin/nodetool enablethrift && opt/cassandra/bin/nodetool enablebinary"]'
+</pre>
 ## Back up the application.
 ```
 ansible-playbook backup.yaml
 ```
+We can see that the data is now in our sstables.
+```
+oc exec -it cassandra-0 nodetool getsstables classicmodels offices 1
+```
+A similar output should look like this
+`/var/lib/cassandra/data/classicmodels/offices-1bb77060b65a11eaa47369447437c0db/md-1-big-Data.db`
+
 ## Delete application.
-Make sure the backup is completed (`oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
-should show "Completed"). Then, run:
+Make sure the backup is completed  
+`oc get backup -n <velero> cassandra -o jsonpath='{.status.phase}'`
+should show "Completed".
 ---
-Note that "velero" should be replaced with whatever namespace velero is in.
+Also note that "velero" should be replaced with whatever namespace velero is in.  
+Then, run:
 ```
 ansible-playbook delete.yaml
 ```
