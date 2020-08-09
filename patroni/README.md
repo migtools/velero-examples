@@ -43,7 +43,7 @@ To install patroni run the following commands,
 
 ```
 oc new-project patroni
-oc new-build https://github.com/devarshshah15/velero-examples#debug --context-dir=patroni --name=patroni -n patroni
+oc new-build https://github.com/konveyor/velero-examples --context-dir=patroni --name=patroni -n patroni
 oc create -f template_patroni_persistent.yaml -n patroni
 oc new-app patroni-pgsql-persistent 
 oc create -f pgbench.yaml
