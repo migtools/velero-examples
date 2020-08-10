@@ -49,7 +49,7 @@ oc new-app patroni-pgsql-persistent
 oc create -f pgbench.yaml
 ```
 
-The command `oc new-build . -n patroni --name=patroni` pushes the image to internal image registry. To check that, run the following commands,
+The command `oc new-build https://github.com/konveyor/velero-examples --context-dir=patroni --name=patroni -n patroni` pushes the image to internal image registry. To check that, run the following commands,
 
 ```
 $ oc get istag
